@@ -12,6 +12,7 @@ from app.schemas import (
     StatusUpdateRequest,
     StatusChangeLog as StatusLogSchema,
 )
+from app.services import profile_history
 
 router = APIRouter(prefix="/graduates", tags=["毕业生管理"])
 
@@ -72,6 +73,7 @@ def create_graduate(graduate_in: GraduateCreate, db: Session = Depends(get_db)):
         remark="初始建档"
     )
     db.add(log)
+    profile_history.record_baseline(db, graduate)
     db.commit()
     db.refresh(graduate)
     return graduate
@@ -92,8 +94,39 @@ def update_graduate(graduate_id: int, graduate_in: GraduateUpdate, db: Session =
         raise HTTPException(status_code=404, detail="毕业生不存在")
 
     update_data = graduate_in.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
+    history_meta = {
+        key: update_data.pop(key)
+        for key in ("source", "changed_by", "reason", "effective_at")
+        if key in update_data
+    }
+
+    tracked_changes = {
+        field: value
+        for field, value in update_data.items()
+        if field in profile_history.TRACKED_FIELDS
+    }
+    untracked = {
+        field: value
+        for field, value in update_data.items()
+        if field not in profile_history.TRACKED_FIELDS
+    }
+    for key, value in untracked.items():
         setattr(graduate, key, value)
+
+    if tracked_changes:
+        try:
+            profile_history.apply_revision(
+                db,
+                graduate,
+                tracked_changes,
+                source=history_meta.get("source") or "档案更新接口",
+                changed_by=history_meta.get("changed_by") or "system",
+                reason=history_meta.get("reason"),
+                effective_at=history_meta.get("effective_at"),
+            )
+        except ValueError as exc:
+            db.rollback()
+            raise HTTPException(status_code=400, detail=str(exc))
 
     db.commit()
     db.refresh(graduate)
@@ -106,6 +139,14 @@ def delete_graduate(graduate_id: int, db: Session = Depends(get_db)):
     if not graduate:
         raise HTTPException(status_code=404, detail="毕业生不存在")
 
+    from app.models import AuditReport, WarningRecalcFlag, ProfileFieldChange, ProfileRevision
+    report_count = db.query(AuditReport).filter(AuditReport.graduate_id == graduate_id).count()
+    if report_count:
+        raise HTTPException(status_code=400, detail="存在已确认的审计报告，不可删除该学生档案")
+
+    db.query(WarningRecalcFlag).filter(WarningRecalcFlag.graduate_id == graduate_id).delete()
+    db.query(ProfileFieldChange).filter(ProfileFieldChange.graduate_id == graduate_id).delete()
+    db.query(ProfileRevision).filter(ProfileRevision.graduate_id == graduate_id).delete()
     db.query(StatusChangeLog).filter(StatusChangeLog.graduate_id == graduate_id).delete()
     db.delete(graduate)
     db.commit()
@@ -136,7 +177,20 @@ def update_status(
     )
     db.add(log)
 
-    graduate.destination_status = status_in.new_status
+    try:
+        profile_history.apply_revision(
+            db,
+            graduate,
+            {"destination_status": status_in.new_status},
+            source=status_in.source or "状态校审",
+            changed_by=status_in.changed_by,
+            reason=status_in.remark,
+            effective_at=status_in.effective_at,
+        )
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc))
+
     db.commit()
     db.refresh(graduate)
     return graduate

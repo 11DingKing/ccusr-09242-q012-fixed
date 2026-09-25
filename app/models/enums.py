@@ -54,6 +54,31 @@ class WarningStatus(str, enum.Enum):
     DISMISSED = "已忽略"
 
 
+class RevisionAction(str, enum.Enum):
+    CREATE = "建档"
+    REVISE = "修正"
+    WITHDRAW = "撤回"
+
+
+class RevisionStatus(str, enum.Enum):
+    ACTIVE = "有效"
+    WITHDRAWN = "已撤回"
+
+
+class FieldChangeStatus(str, enum.Enum):
+    ACTIVE = "有效"
+    WITHDRAWN = "已撤回"
+
+
+class RecalcFlagStatus(str, enum.Enum):
+    OPEN = "待重算"
+    RESOLVED = "已重算"
+
+
+class AuditReportStatus(str, enum.Enum):
+    CONFIRMED = "已确认"
+
+
 INDUSTRIES = [
     "信息技术",
     "金融",

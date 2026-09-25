@@ -38,12 +38,19 @@ class GraduateUpdate(BaseSchema):
     unit_industry: Optional[str] = None
     salary_range: Optional[SalaryRange] = None
     is_aligned: Optional[bool] = None
+    # 随更新登记的变更历史信息（缺省时按"档案更新接口/系统操作人"留痕）
+    source: Optional[str] = None
+    changed_by: Optional[str] = None
+    reason: Optional[str] = None
+    effective_at: Optional[datetime] = None
 
 
 class StatusUpdateRequest(BaseSchema):
     new_status: DestinationStatus
     changed_by: str
     remark: Optional[str] = None
+    source: Optional[str] = None
+    effective_at: Optional[datetime] = None
 
 
 class Graduate(GraduateBase, TimestampSchema):

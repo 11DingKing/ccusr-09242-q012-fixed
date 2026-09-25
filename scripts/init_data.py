@@ -362,6 +362,12 @@ def main():
         bench_count = init_province_reference_lines(db)
         print(f"   已初始化 {bench_count} 条省基准线数据")
 
+        print("\n6. 正在生成档案历史基线...")
+        from app.services.profile_history import backfill_baselines
+        baseline_count = backfill_baselines(db)
+        db.commit()
+        print(f"   已为 {baseline_count} 名毕业生建立变更历史基线")
+
         print("\n" + "=" * 60)
         print("数据初始化完成！")
         print("=" * 60)

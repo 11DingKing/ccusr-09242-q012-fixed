@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core import init_db, SessionLocal
 from app.models import Base, ProvinceReferenceLine, Warning, AttributionRecord
+from app.services.profile_history import backfill_baselines
 
 
 def migrate():
@@ -27,10 +28,15 @@ def migrate():
         print(f"   预警表: {warning_count} 条记录")
         print(f"   归因记录表: {attribution_count} 条记录")
 
+        print("\n3. 回填档案变更历史基线...")
+        backfilled = backfill_baselines(db)
+        db.commit()
+        print(f"   已为 {backfilled} 名存量学生补建建档基线")
+
         if bench_count == 0:
-            print("\n3. 省基准线表为空，请运行 python scripts/init_data.py 初始化数据")
+            print("\n4. 省基准线表为空，请运行 python scripts/init_data.py 初始化数据")
         else:
-            print("\n3. 数据库迁移完成！")
+            print("\n4. 数据库迁移完成！")
 
     except Exception as e:
         print(f"\n迁移失败: {e}")
