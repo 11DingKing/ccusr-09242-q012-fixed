@@ -9,6 +9,10 @@ from .enums import (
     WarningLevel,
     AttributionCategory,
     WarningStatus,
+    RevisionSource,
+    RevisionStatus,
+    RecalculationStatus,
+    AuditReportStatus,
 )
 from .college import College
 from .micro_major import MicroMajor
@@ -18,6 +22,9 @@ from .employer_follow_up import EmployerFollowUp
 from .warning import Warning
 from .attribution_record import AttributionRecord
 from .province_reference_line import ProvinceReferenceLine
+from .profile_revision import ProfileRevision
+from .recalculation_flag import RecalculationFlag
+from .audit_report import AuditReport
 
 __all__ = [
     "Base",
@@ -31,6 +38,10 @@ __all__ = [
     "WarningLevel",
     "AttributionCategory",
     "WarningStatus",
+    "RevisionSource",
+    "RevisionStatus",
+    "RecalculationStatus",
+    "AuditReportStatus",
     "College",
     "MicroMajor",
     "Graduate",
@@ -39,4 +50,7 @@ __all__ = [
     "Warning",
     "AttributionRecord",
     "ProvinceReferenceLine",
+    "ProfileRevision",
+    "RecalculationFlag",
+    "AuditReport",
 ]

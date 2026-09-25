@@ -54,6 +54,29 @@ class WarningStatus(str, enum.Enum):
     DISMISSED = "已忽略"
 
 
+class RevisionSource(str, enum.Enum):
+    SCHOOL_REVIEW = "校审"
+    COLLEGE_CORRECTION = "学院修正"
+    STUDENT_APPEAL = "学生申诉"
+    DATA_IMPORT = "数据导入"
+    SYSTEM = "系统"
+
+
+class RevisionStatus(str, enum.Enum):
+    ACTIVE = "生效中"
+    RETRACTED = "已撤回"
+
+
+class RecalculationStatus(str, enum.Enum):
+    PENDING = "待重算"
+    RESOLVED = "已重算"
+
+
+class AuditReportStatus(str, enum.Enum):
+    DRAFT = "草稿"
+    CONFIRMED = "已确认"
+
+
 INDUSTRIES = [
     "信息技术",
     "金融",

@@ -1,10 +1,20 @@
 from typing import List, Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
 from app.core import get_db
-from app.models import Graduate, StatusChangeLog, DestinationStatus, DestinationType
+from app.models import (
+    Graduate,
+    StatusChangeLog,
+    DestinationStatus,
+    DestinationType,
+    ProfileRevision,
+    RecalculationFlag,
+    RevisionSource,
+    AuditReport,
+)
 from app.schemas import (
     Graduate as GraduateSchema,
     GraduateCreate,
@@ -12,6 +22,8 @@ from app.schemas import (
     StatusUpdateRequest,
     StatusChangeLog as StatusLogSchema,
 )
+from app.services.profile_history import TRACKED_FIELDS
+from app.utils.profile_revision_recorder import record_revision
 
 router = APIRouter(prefix="/graduates", tags=["毕业生管理"])
 
@@ -92,8 +104,21 @@ def update_graduate(graduate_id: int, graduate_in: GraduateUpdate, db: Session =
         raise HTTPException(status_code=404, detail="毕业生不存在")
 
     update_data = graduate_in.model_dump(exclude_unset=True)
+    now = datetime.now()
     for key, value in update_data.items():
-        setattr(graduate, key, value)
+        if key in TRACKED_FIELDS:
+            record_revision(
+                db,
+                graduate,
+                key,
+                value,
+                source=RevisionSource.SYSTEM,
+                effective_at=now,
+                changed_by="system",
+                reason="档案在线更新",
+            )
+        else:
+            setattr(graduate, key, value)
 
     db.commit()
     db.refresh(graduate)
@@ -106,6 +131,9 @@ def delete_graduate(graduate_id: int, db: Session = Depends(get_db)):
     if not graduate:
         raise HTTPException(status_code=404, detail="毕业生不存在")
 
+    db.query(AuditReport).filter(AuditReport.graduate_id == graduate_id).delete()
+    db.query(RecalculationFlag).filter(RecalculationFlag.graduate_id == graduate_id).delete()
+    db.query(ProfileRevision).filter(ProfileRevision.graduate_id == graduate_id).delete()
     db.query(StatusChangeLog).filter(StatusChangeLog.graduate_id == graduate_id).delete()
     db.delete(graduate)
     db.commit()
@@ -136,7 +164,17 @@ def update_status(
     )
     db.add(log)
 
-    graduate.destination_status = status_in.new_status
+    record_revision(
+        db,
+        graduate,
+        "destination_status",
+        status_in.new_status,
+        source=RevisionSource.SYSTEM,
+        effective_at=datetime.now(),
+        changed_by=status_in.changed_by,
+        reason=status_in.remark or "去向状态更新",
+    )
+
     db.commit()
     db.refresh(graduate)
     return graduate

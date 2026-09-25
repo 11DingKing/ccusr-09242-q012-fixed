@@ -54,6 +54,21 @@ from .profile import (
     MicroMajorProfile,
     CollegeProfile,
 )
+from .profile_revision import (
+    ProfileRevision,
+    ProfileRevisionCreate,
+    ProfileRevisionResult,
+    RetractRevisionRequest,
+    RecalculationFlag,
+    RecalculationFlagResolve,
+    GraduateArchive,
+    ArchiveFieldProvenance,
+)
+from .audit_report import (
+    AuditReport,
+    AuditReportCreate,
+    AuditReportConfirm,
+)
 
 __all__ = [
     "BaseSchema",
@@ -104,4 +119,15 @@ __all__ = [
     "KeyIndicatorsComparison",
     "MicroMajorProfile",
     "CollegeProfile",
+    "ProfileRevision",
+    "ProfileRevisionCreate",
+    "ProfileRevisionResult",
+    "RetractRevisionRequest",
+    "RecalculationFlag",
+    "RecalculationFlagResolve",
+    "GraduateArchive",
+    "ArchiveFieldProvenance",
+    "AuditReport",
+    "AuditReportCreate",
+    "AuditReportConfirm",
 ]

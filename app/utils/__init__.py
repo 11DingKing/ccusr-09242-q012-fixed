@@ -26,6 +26,8 @@ from .profile_builder import (
     build_profile_stats,
     build_key_indicators_comparison,
 )
+from .profile_revision_recorder import record_revision
+from .archive_builder import build_archive_payload
 
 __all__ = [
     "get_salary_midpoint",

@@ -38,3 +38,4 @@ class Graduate(Base, TimestampMixin):
     micro_major = relationship("MicroMajor", back_populates="graduates")
     status_logs = relationship("StatusChangeLog", back_populates="graduate", order_by="StatusChangeLog.changed_at.desc()")
     follow_ups = relationship("EmployerFollowUp", back_populates="graduate", order_by="EmployerFollowUp.follow_up_date.desc()")
+    profile_revisions = relationship("ProfileRevision", back_populates="graduate", order_by="ProfileRevision.effective_at")
